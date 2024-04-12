@@ -1,6 +1,6 @@
 use clap::Parser;
 use rand_core::{RngCore, OsRng};
-use std::str;
+use std::{str, process};
 
 #[derive(Parser)]
 struct Args{
@@ -19,42 +19,59 @@ struct Args{
 fn main() {
     let args = Args::parse();
 
-    let mut result = vec![0u8; args.range.into()];
-    OsRng.fill_bytes(&mut result);
+    if !args.numbers && !args.lowercase && !args.uppercase && !args.special {
+        eprintln!("Error: No character type was selected to generate. Please use --help and use the wanted flags to generate respective characters.");
+        process::exit(1);
+    }
 
-    bytes_to_utfchars(&mut result);
+    let mut seconds_for_mouse: u8 = 5;
+
+    let mut result = vec![0u8; args.range.into()];
+    match OsRng.try_fill_bytes(&mut result) {
+        Ok(b) => b,
+        Err(_) => seconds_for_mouse = 10,
+    };
+
+    bytes_to_utfchars(&mut result, args.numbers, args.lowercase, args.uppercase, args.special);
 
     let result_str = match str::from_utf8(&result) {
         Ok(s) => s,
-        Err(e) => panic!("{}",e)
+        Err(e) => {
+            eprintln!("Error: {}.", e);
+            process::exit(1);
+        }
     };
 
     println!("{}", result_str);
 }
 
-fn bytes_to_utfchars(result: &mut Vec<u8>){
-    const NUMBERS: [u8; 2] = [48, 10];
-    const LOWERLETTERS: [u8; 2] = [97, 26];
-    const UPPERLETTERS: [u8; 2] = [65, 26];
+fn bytes_to_utfchars(result: &mut Vec<u8>, numop: bool, lowop: bool, uppop: bool, specop: bool){
+    const NUMBERS: &str = "0123456789";
+    const LOWERLETTERS: &str = "abcdefghijklmnopqrstuvwxyz";
+    const UPPERLETTERS: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const SPECIALCHARS: &str = " -~!@#$%^&*_+=`|(){}[:;\"'<>,.?]";
-    const SPECLEN: u8 = 31;
 
-    let range: u8 = NUMBERS[1] + LOWERLETTERS[1] + UPPERLETTERS[1] + SPECLEN;
+    let mut range: u8 = 0;
+    let mut validchars: Vec<u8> = Vec::new();
+    if numop {
+        range += NUMBERS.len() as u8;
+        validchars.extend(NUMBERS.as_bytes().to_vec());
+    }
+    if lowop {
+        range += LOWERLETTERS.len() as u8;
+        validchars.extend(LOWERLETTERS.as_bytes().to_vec());
+    }
+    if uppop {
+        range += UPPERLETTERS.len() as u8;
+        validchars.extend(UPPERLETTERS.as_bytes().to_vec());
+    }
+    if specop {
+        range += SPECIALCHARS.len() as u8;
+        validchars.extend(SPECIALCHARS.as_bytes().to_vec());
+    }
 
     for byte in result {
         *byte %= range;
-        if *byte < NUMBERS[1] {
-            *byte += NUMBERS[0];
-        } else if *byte < NUMBERS[1] + UPPERLETTERS[1] {
-            *byte += UPPERLETTERS[0] - NUMBERS[1];
-        } else if *byte < NUMBERS[1] + UPPERLETTERS[1] + LOWERLETTERS[1] {
-            *byte += LOWERLETTERS[0] - NUMBERS[1] - UPPERLETTERS[1];
-        } else {
-            *byte = SPECIALCHARS
-                .chars()
-                .nth((*byte % SPECLEN).into())
-                .unwrap()
-                as u8;
-        }
+        *byte = validchars[*byte as usize];
     }
 }
