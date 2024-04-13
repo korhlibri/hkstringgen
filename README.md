@@ -1,5 +1,5 @@
 # hkstringgen-cli
-A simple random string generator written in Rust, using system randomness and mouse movement
+A simple random string generator written in Rust, using system randomness and mouse movement.
 
 ## Security Notes
 No security audits of this program have ever been performed, and it has not been thoroughly assessed to be considered secure.
