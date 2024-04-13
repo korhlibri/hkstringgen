@@ -24,3 +24,13 @@ You can also run the executable with Cargo.
 cargo run
 ```
 Alternatively, you can find the executables in the release version.
+
+### Argument Options
+This program requires the user to include certain flags to modify the program behavior.
+
+Initially, you can pass the `-h` or the `--help` flag to see the available options.
+
+You can include the flag with Cargo by using two dashes `--`.
+```
+cargo run -- -h
+```
