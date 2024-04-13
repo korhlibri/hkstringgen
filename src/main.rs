@@ -1,4 +1,4 @@
-// hkstringgen-cli - Simple random string generator with mouse movement option
+// hkstringgen - Simple random string generator with mouse movement option and GUI
 // Copyright (C) 2024 Hlib Korzhynskyy
 // 
 // This program is free software: you can redistribute it and/or modify it under the terms of
@@ -12,46 +12,15 @@
 // You should have received a copy of the GNU General Public License along with this
 // program. If not, see <https://www.gnu.org/licenses/>.
 
-use clap::Parser;
 use rand_core::{RngCore, OsRng};
 use std::{str, process, thread, time};
 use mouse_position::mouse_position::Mouse;
 
-/// Program to generate truly random strings
-#[derive(Parser)]
-struct Args{
-    /// Range of the string to generate (from 0 to 255)
-    #[arg(short, long, default_value_t = 8)]
-    range: u8,
-    /// Include numbers in string
-    #[arg(short, long, action)]
-    numbers: bool,
-    /// Include lowercase letters in string 
-    #[arg(short, long, action)]
-    lowercase: bool,
-    /// Include uppercase letters in string
-    #[arg(short, long, action)]
-    uppercase: bool,
-    /// Include special characters in string
-    #[arg(short, long, action)]
-    special: bool,
-    /// Include mouse movement in randomization (Significant mouse movement recommended)
-    #[arg(short, long, action)]
-    mouse: bool,
-}
-
 fn main() {
-    let args = Args::parse();
-
-    if !args.numbers && !args.lowercase && !args.uppercase && !args.special {
-        eprintln!("Error: No character type was selected to generate. Use --help and select the wanted flags to generate respective characters.");
-        process::exit(1);
-    }
-
     let mut seconds_for_mouse: u8 = 10;
 
     // Gets randomness from system (supposed to be cryptographically safe)
-    let mut result = vec![0u8; args.range.into()];
+    let mut result = vec![0u8; 8];
     match OsRng.try_fill_bytes(&mut result) {
         Ok(b) => b,
         Err(_) => seconds_for_mouse = 20,
@@ -59,14 +28,14 @@ fn main() {
 
     // If failing to get randomness from system, force the user to use mouse coordinates
     // Also doubles the seconds required to generate randomness
-    if !args.mouse && seconds_for_mouse == 20{
+    if true && seconds_for_mouse == 20{
         eprintln!("Error: Failed to get randomness from system. In order to generate random values, mouse movement needs to be recorded. Use --mouse to record mouse movement.");
         process::exit(1);
-    } else if args.mouse {
-        mouse_coords_to_random(&mut result, seconds_for_mouse, args.range)
+    } else if true {
+        mouse_coords_to_random(&mut result, seconds_for_mouse, 8)
     }
 
-    bytes_to_utfchars(&mut result, args.numbers, args.lowercase, args.uppercase, args.special);
+    bytes_to_utfchars(&mut result, true, true, true, true);
 
     // Converts utf8 bytes to readable characters
     let result_str = match str::from_utf8(&result) {
