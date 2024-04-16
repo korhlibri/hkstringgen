@@ -15,38 +15,121 @@
 use rand_core::{RngCore, OsRng};
 use std::{str, process, thread, time};
 use mouse_position::mouse_position::Mouse;
+use gtk::prelude::*;
+use gtk::{
+    gio, glib, Align, Application, ApplicationWindow, Button, Orientation, CheckButton, Entry, Label
+};
 
-fn main() {
-    let mut seconds_for_mouse: u8 = 10;
+const APP_ID: &str = "org.gtk_rs.hkstringgen";
 
-    // Gets randomness from system (supposed to be cryptographically safe)
-    let mut result = vec![0u8; 8];
-    match OsRng.try_fill_bytes(&mut result) {
-        Ok(b) => b,
-        Err(_) => seconds_for_mouse = 20,
-    };
+fn main() -> glib::ExitCode{
+    let app = Application::builder().application_id(APP_ID).build();
 
-    // If failing to get randomness from system, force the user to use mouse coordinates
-    // Also doubles the seconds required to generate randomness
-    if true && seconds_for_mouse == 20{
-        eprintln!("Error: Failed to get randomness from system. In order to generate random values, mouse movement needs to be recorded. Use --mouse to record mouse movement.");
-        process::exit(1);
-    } else if true {
-        mouse_coords_to_random(&mut result, seconds_for_mouse, 8)
-    }
+    app.connect_activate(build_ui);
 
-    bytes_to_utfchars(&mut result, true, true, true, true);
+    app.run()
+    // let mut seconds_for_mouse: u8 = 10;
 
-    // Converts utf8 bytes to readable characters
-    let result_str = match str::from_utf8(&result) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("Error: {}.", e);
-            process::exit(1);
-        }
-    };
+    // // Gets randomness from system (supposed to be cryptographically safe)
+    // let mut result = vec![0u8; 8];
+    // match OsRng.try_fill_bytes(&mut result) {
+    //     Ok(b) => b,
+    //     Err(_) => seconds_for_mouse = 20,
+    // };
 
-    println!("{}", result_str);
+    // // If failing to get randomness from system, force the user to use mouse coordinates
+    // // Also doubles the seconds required to generate randomness
+    // if true && seconds_for_mouse == 20{
+    //     eprintln!("Error: Failed to get randomness from system. In order to generate random values, mouse movement needs to be recorded. Use --mouse to record mouse movement.");
+    //     process::exit(1);
+    // } else if true {
+    //     mouse_coords_to_random(&mut result, seconds_for_mouse, 8)
+    // }
+
+    // bytes_to_utfchars(&mut result, true, true, true, true);
+
+    // // Converts utf8 bytes to readable characters
+    // let result_str = match str::from_utf8(&result) {
+    //     Ok(s) => s,
+    //     Err(e) => {
+    //         eprintln!("Error: {}.", e);
+    //         process::exit(1);
+    //     }
+    // };
+
+    // println!("{}", result_str);
+}
+
+fn build_ui(app: &Application) {
+    // button.connect_clicked(|button| {
+    //     button.set_label("Hello World!");
+    // });
+    let string_display = Entry::builder()
+        .editable(false)
+        .build();
+
+    let number_check = CheckButton::builder()
+        .label("Include numbers")
+        .build();
+
+    let range_entry = Entry::builder()
+        .max_length(3)
+        .max_width_chars(3)
+        .build();
+
+    let range_label = Label::builder()
+        .label("Number of characters to generate (from 0 to 255)")
+        .build();
+
+    let range_box = gtk::Box::builder()
+        .orientation(Orientation::Horizontal)
+        .spacing(5)
+        .build();
+    
+    range_box.append(&range_entry);
+    range_box.append(&range_label);
+
+    let lower_check = CheckButton::builder()
+        .label("Include lowercase letters")
+        .build();
+
+    let upper_check = CheckButton::builder()
+        .label("Include uppercase letters")
+        .build();
+
+    let spec_check = CheckButton::builder()
+        .label("Include special characters")
+        .build();
+
+    let button = Button::builder()
+        .label("Generate random string")
+        .build();
+
+    let gtk_box = gtk::Box::builder()
+        .orientation(Orientation::Vertical)
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .spacing(12)
+        .halign(Align::Center)
+        .build();
+
+    gtk_box.append(&string_display);
+    gtk_box.append(&range_box);
+    gtk_box.append(&number_check);
+    gtk_box.append(&lower_check);
+    gtk_box.append(&upper_check);
+    gtk_box.append(&spec_check);
+    gtk_box.append(&button);
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .title("My GTK App")
+        .child(&gtk_box)
+        .build();
+
+    window.present();
 }
 
 fn mouse_coords_to_random(result: &mut Vec<u8>, seconds: u8, vecrange: u8){
